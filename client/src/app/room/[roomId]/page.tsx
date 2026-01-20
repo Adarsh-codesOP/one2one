@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -27,7 +27,7 @@ export default function RoomPage() {
 
     const handleToggleMic = () => {
         setIsMuted(!isMuted);
-        toggleAudio(isMuted); // passed logic might need inversion depending on hook
+        toggleAudio(isMuted);
     };
 
     const handleToggleVideo = () => {
@@ -45,7 +45,7 @@ export default function RoomPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    // Fix: Attach remote stream to video element when it becomes available
+    // Attach remote stream when available
     useEffect(() => {
         if (remoteVideoRef.current && remoteStream) {
             remoteVideoRef.current.srcObject = remoteStream;
@@ -53,62 +53,50 @@ export default function RoomPage() {
     }, [remoteStream, remoteVideoRef]);
 
     return (
-        <div className="h-screen w-full bg-background relative overflow-hidden flex flex-col items-center justify-center p-4">
-            {/* Header / Status */}
-            <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
-                <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-full px-4 py-2 flex items-center gap-2">
-                    <div className={cn("h-2 w-2 rounded-full animate-pulse", isConnected ? "bg-green-500" : "bg-yellow-500")} />
-                    <span className="text-sm font-medium">
-                        {isConnected ? "Connected" : connectionStatus || "Waiting for peer..."}
-                    </span>
-                </div>
+        <div className="h-screen w-full bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/10 via-background to-background relative overflow-hidden flex flex-col items-center justify-center p-4">
 
-                <Button variant="outline" size="sm" onClick={copyRoomId} className="bg-card/50 backdrop-blur-md rounded-full border-border/50">
-                    <span className="mr-2 text-muted-foreground">Room ID:</span> {roomId}
-                    {copied ? <Check className="ml-2 h-3 w-3 text-green-500" /> : <Copy className="ml-2 h-3 w-3" />}
+            {/* Abstract Background Shapes */}
+            <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-900/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
+
+            {/* Header / Status Pill */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-3 items-center w-full px-4 md:auto">
+                {/* Connection Status Badge */}
+                <motion.div
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    className="glass-card px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg"
+                >
+                    <div className={cn("h-2 w-2 rounded-full animate-pulse shadow-[0_0_10px_currentColor]",
+                        isConnected ? "bg-emerald-500 text-emerald-500" : "bg-amber-500 text-amber-500"
+                    )} />
+                    <span className="text-xs font-medium tracking-wide text-muted-foreground/80 uppercase">
+                        {isConnected ? "Live Secure Connection" : connectionStatus || "Connecting..."}
+                    </span>
+                </motion.div>
+
+                {/* Room ID Copy Button - Only show if not connected or just as useful info */}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={copyRoomId}
+                    className="text-xs text-muted-foreground hover:text-white hover:bg-white/5 transition-colors gap-2"
+                >
+                    Room: <span className="font-mono bg-white/5 px-1 rounded">{roomId}</span>
+                    {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                 </Button>
             </div>
 
             {/* Video Grid */}
-            <div className="w-full max-w-6xl flex-1 flex flex-col md:flex-row gap-4 items-center justify-center relative">
+            <div className="w-full max-w-6xl flex-1 flex flex-col md:flex-row gap-4 items-center justify-center p-2 md:p-6 transition-all duration-500 ease-in-out relative z-10">
 
-                {/* Local Video */}
-                <motion.div
-                    layout
-                    className={cn(
-                        "relative bg-muted rounded-2xl overflow-hidden shadow-2xl transition-all duration-500 ease-in-out border border-border/50",
-                        remoteStream ? "w-full md:w-1/2 h-[40vh] md:h-auto aspect-video" : "w-full max-w-4xl h-[60vh] md:h-auto aspect-video"
-                    )}
-                >
-                    <video
-                        ref={localVideoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className={cn("w-full h-full object-cover transform scale-x-[-1]", isVideoOff && "hidden")}
-                    />
-                    <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-lg backdrop-blur-sm">
-                        <span className="text-white text-sm font-medium">You</span>
-                    </div>
-                    {isVideoOff && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-card">
-                            <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
-                                <VideoOff className="h-10 w-10 text-primary" />
-                            </div>
-                        </div>
-                    )}
-                </motion.div>
-
-                {/* Remote Video */}
+                {/* Remote Video (Main Stage) */}
                 {remoteStream && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
+                        initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        className={cn(
-                            "relative bg-muted rounded-2xl overflow-hidden shadow-2xl border border-border/50",
-                            "w-full md:w-1/2 h-[40vh] md:h-auto aspect-video" // Split screen when connected
-                        )}
+                        layout
+                        className="relative w-full md:flex-1 h-1/2 md:h-full max-h-[70vh] md:max-h-full rounded-[2rem] overflow-hidden shadow-2xl border border-white/5 bg-black/40 ring-1 ring-white/10 group order-1 md:order-2"
                     >
                         <video
                             ref={remoteVideoRef}
@@ -116,45 +104,110 @@ export default function RoomPage() {
                             playsInline
                             className="w-full h-full object-cover"
                         />
-                        <div className="absolute bottom-4 left-4 bg-black/50 px-3 py-1 rounded-lg backdrop-blur-sm">
-                            <span className="text-white text-sm font-medium">Peer</span>
+                        <div className="absolute top-4 left-4 glass px-3 py-1 rounded-full flex items-center gap-2">
+                            <Users className="h-3 w-3 text-white/70" />
+                            <span className="text-white/90 text-xs font-medium tracking-wide">Peer</span>
                         </div>
-                        {/* Placeholder for remote video muted/off could go here if we sync state via socket */}
+                    </motion.div>
+                )}
+
+                {/* Local Video */}
+                <motion.div
+                    layout
+                    className={cn(
+                        "relative rounded-[2rem] overflow-hidden shadow-2xl border border-white/5 bg-black/40 ring-1 ring-white/10 transition-all duration-500 ease-in-out",
+                        // When remote stream exists, Local video becomes smaller (Picture-in-Picture style or side stack)
+                        remoteStream
+                            ? "w-1/3 md:w-64 aspect-[3/4] md:aspect-video md:absolute md:bottom-24 md:right-8 lg:right-12 z-30 shadow-xl order-2 md:order-1"
+                            : "w-full max-w-4xl aspect-video mx-auto order-1"
+                    )}
+                >
+                    <video
+                        ref={localVideoRef}
+                        autoPlay
+                        muted
+                        playsInline
+                        className={cn("w-full h-full object-cover transform scale-x-[-1]", isVideoOff && "invisible")}
+                    />
+
+                    {/* Self Label */}
+                    <div className="absolute bottom-4 left-4 glass px-3 py-1 rounded-full backdrop-blur-md">
+                        <span className="text-white/90 text-xs font-medium tracking-wide">You</span>
+                    </div>
+
+                    {/* Camera Off State */}
+                    {isVideoOff && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-900/90 backdrop-blur-sm gap-3">
+                            <div className="h-16 w-16 rounded-full bg-white/5 flex items-center justify-center">
+                                <VideoOff className="h-6 w-6 text-white/50" />
+                            </div>
+                            <span className="text-white/50 text-sm">Camera Off</span>
+                        </div>
+                    )}
+                </motion.div>
+
+                {/* Waiting State (If no remote stream) */}
+                {!remoteStream && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                    >
+                        <div className="glass px-6 py-3 rounded-full flex items-center gap-3">
+                            <div className="relative">
+                                <div className="h-2 w-2 bg-primary rounded-full animate-ping absolute inset-0" />
+                                <div className="h-2 w-2 bg-primary rounded-full relative" />
+                            </div>
+                            <span className="text-sm font-medium text-white/80">Waiting for peer to join...</span>
+                        </div>
                     </motion.div>
                 )}
             </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-card/80 backdrop-blur-lg border border-border/50 rounded-full px-6 py-3 flex items-center gap-4 shadow-2xl z-20">
-                <Button
-                    variant={isMuted ? "destructive" : "secondary"}
-                    size="icon"
-                    className="h-12 w-12 rounded-full"
-                    onClick={handleToggleMic}
-                >
-                    {isMuted ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                </Button>
+            {/* Controls Bar */}
+            <motion.div
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                transition={{ type: "spring", damping: 20 }}
+                className="absolute bottom-6 md:bottom-8 z-50"
+            >
+                <div className="glass p-2 rounded-[2rem] flex items-center gap-2 md:gap-4 shadow-2xl ring-1 ring-white/10 px-4 md:px-6 py-3">
+                    <Button
+                        variant={isMuted ? "destructive" : "secondary"}
+                        size="icon"
+                        className={cn(
+                            "h-12 w-12 md:h-14 md:w-14 rounded-full transition-all duration-300 shadow-md",
+                            !isMuted && "bg-white/10 hover:bg-white/20 text-white border-0"
+                        )}
+                        onClick={handleToggleMic}
+                    >
+                        {isMuted ? <MicOff className="h-5 w-5 md:h-6 md:w-6" /> : <Mic className="h-5 w-5 md:h-6 md:w-6" />}
+                    </Button>
 
-                <Button
-                    variant={isVideoOff ? "destructive" : "secondary"}
-                    size="icon"
-                    className="h-12 w-12 rounded-full"
-                    onClick={handleToggleVideo}
-                >
-                    {isVideoOff ? <VideoOff className="h-5 w-5" /> : <Video className="h-5 w-5" />}
-                </Button>
+                    <Button
+                        variant={isVideoOff ? "destructive" : "secondary"}
+                        size="icon"
+                        className={cn(
+                            "h-12 w-12 md:h-14 md:w-14 rounded-full transition-all duration-300 shadow-md",
+                            !isVideoOff && "bg-white/10 hover:bg-white/20 text-white border-0"
+                        )}
+                        onClick={handleToggleVideo}
+                    >
+                        {isVideoOff ? <VideoOff className="h-5 w-5 md:h-6 md:w-6" /> : <Video className="h-5 w-5 md:h-6 md:w-6" />}
+                    </Button>
 
-                <div className="w-px h-8 bg-border mx-2" />
+                    <div className="w-px h-8 bg-white/10 mx-1 md:mx-2" />
 
-                <Button
-                    variant="destructive"
-                    size="icon"
-                    className="h-12 w-12 rounded-full"
-                    onClick={handleLeave}
-                >
-                    <PhoneOff className="h-5 w-5" />
-                </Button>
-            </div>
+                    <Button
+                        variant="destructive"
+                        size="icon"
+                        className="h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg hover:scale-110 transition-transform duration-200"
+                        onClick={handleLeave}
+                    >
+                        <PhoneOff className="h-5 w-5 md:h-6 md:w-6 fill-current" />
+                    </Button>
+                </div>
+            </motion.div>
         </div>
     );
 }
