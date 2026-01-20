@@ -171,6 +171,7 @@ export const useWebRTC = (roomId: string) => {
         localVideoRef,
         remoteVideoRef,
         isConnected,
+        connectionStatus,
         toggleAudio,
         toggleVideo
     };

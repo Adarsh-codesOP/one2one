@@ -49,8 +49,9 @@ const start = async () => {
             // New event for checking validity before joining
             socket.on('check-room', (roomId, callback) => {
                 const room = io.sockets.adapter.rooms.get(roomId);
+                // "Exists" means it's tracked in adapter AND has people (size > 0)
                 const exists = room && room.size > 0;
-                console.log(`Check room request for ${roomId}: Exists? ${exists}`);
+                console.log(`Check room request for ${roomId}: Exists? ${exists} (Size: ${room?.size || 0})`);
                 callback({ exists: !!exists });
             });
 
