@@ -136,10 +136,10 @@ export default function Home() {
               <form onSubmit={joinRoom} className="flex gap-2">
                 <div className="relative flex-1">
                   <Input
-                    placeholder="e.g. 1f96f217"
+                    placeholder="e.g. A2X9"
                     value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                    className="h-12 bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-lg tracking-wide placeholder:tracking-normal"
+                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                    className="h-12 bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-lg tracking-wide placeholder:tracking-normal uppercase"
                   />
                 </div>
                 <Button type="submit" variant="secondary" className="h-12 w-12 shrink-0 aspect-square p-0 bg-white/10 hover:bg-white/20 border border-white/5 text-primary">
