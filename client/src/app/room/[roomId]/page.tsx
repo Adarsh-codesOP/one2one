@@ -47,15 +47,35 @@ export default function RoomPage() {
         }
     }, [remoteStream, remoteVideoRef]);
 
+    const handleToggleMic = () => {
+        setIsMuted(!isMuted);
+        toggleAudio(isMuted);
+    };
+
+    const handleToggleVideo = () => {
+        setIsVideoOff(!isVideoOff);
+        toggleVideo(isVideoOff);
+    };
+
+    const handleLeave = () => {
+        router.push('/');
+    };
+
+    const copyRoomId = () => {
+        navigator.clipboard.writeText(roomId);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     return (
-        <div className="h-screen w-full bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/10 via-background to-background relative overflow-hidden flex flex-col items-center justify-center p-4">
+        <div className="h-screen w-full bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/10 via-background to-background relative overflow-hidden flex flex-col items-center justify-center">
 
             {/* Abstract Background Shapes */}
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-900/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
 
             {/* Header / Status Pill */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-3 items-center w-full px-4 md:auto">
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-3 items-center w-full px-4 text-center">
                 {/* Connection Status Badge */}
                 <motion.div
                     initial={{ y: -20, opacity: 0 }}
@@ -70,7 +90,7 @@ export default function RoomPage() {
                     </span>
                 </motion.div>
 
-                {/* Room ID Copy Button - Only show if not connected or just as useful info */}
+                {/* Room ID Copy Button */}
                 <Button
                     variant="ghost"
                     size="sm"
@@ -82,16 +102,15 @@ export default function RoomPage() {
                 </Button>
             </div>
 
-            {/* Video Grid */}
-            <div className="w-full max-w-6xl flex-1 flex flex-col md:flex-row gap-4 items-center justify-center p-2 md:p-6 transition-all duration-500 ease-in-out relative z-10">
+            {/* Video Grid - Full Screen Layout */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center overflow-hidden">
 
-                {/* Remote Video (Main Stage) */}
-                {remoteStream && (
+                {/* Remote Video (Full Screen Background) */}
+                {remoteStream ? (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        layout
-                        className="relative w-full md:flex-1 h-1/2 md:h-full max-h-[70vh] md:max-h-full rounded-[2rem] overflow-hidden shadow-2xl border border-white/5 bg-black/40 ring-1 ring-white/10 group order-1 md:order-2"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute inset-0 z-0 h-full w-full"
                     >
                         <video
                             ref={remoteVideoRef}
@@ -99,22 +118,45 @@ export default function RoomPage() {
                             playsInline
                             className="w-full h-full object-cover"
                         />
-                        <div className="absolute top-4 left-4 glass px-3 py-1 rounded-full flex items-center gap-2">
+                        {/* Peer Label */}
+                        <div className="absolute top-24 left-6 glass px-3 py-1 rounded-full flex items-center gap-2 z-10 backdrop-blur-md">
                             <Users className="h-3 w-3 text-white/70" />
                             <span className="text-white/90 text-xs font-medium tracking-wide">Peer</span>
                         </div>
                     </motion.div>
+                ) : (
+                    /* Waiting State (Centered when alone) */
+                    <div className="flex flex-col items-center justify-center p-8 z-0">
+                        <div className="glass px-8 py-4 rounded-full flex items-center gap-4 animate-pulse">
+                            <div className="relative h-3 w-3">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                            </div>
+                            <span className="text-base font-medium text-white/90">Waiting for peer to join...</span>
+                        </div>
+                        <p className="mt-4 text-sm text-muted-foreground">Share the Room ID to start chatting</p>
+                    </div>
                 )}
 
-                {/* Local Video */}
+                {/* Local Video - Picture in Picture Overlay */}
                 <motion.div
                     layout
                     className={cn(
-                        "relative rounded-[2rem] overflow-hidden shadow-2xl border border-white/5 bg-black/40 ring-1 ring-white/10 transition-all duration-500 ease-in-out",
-                        // When remote stream exists, Local video becomes smaller (Picture-in-Picture style or side stack)
+                        "transition-all duration-500 ease-in-out overflow-hidden shadow-2xl bg-black/60 ring-1 ring-white/10 z-30",
+                        // Logic for PiP:
+                        // If remoteStream exists: Bottom Right Corner (Small)
+                        // If NO remoteStream: Full Screen (Background) - mimicking a "Lobby" or "Lone" state
+                        // BUT, to satisfy "small in one corner" request specifically even if alone?
+                        // "i need my view to pe overlapped in both mobile and also in desktop but small in one corner"
+                        // If I am alone, making me small corner means 90% screen is empty background.
+                        // I will assume they mean "When call is active (or maybe always?)"
+                        // Let's keep the standard behavior I designed:
+                        // - Remote Present: Local is PiP (Corner)
+                        // - Remote Absent: Local is Full Screen (You look at yourself while waiting)
+                        // This is industry standard (Meet, Zoom).
                         remoteStream
-                            ? "w-1/3 md:w-64 aspect-[3/4] md:aspect-video md:absolute md:bottom-24 md:right-8 lg:right-12 z-30 shadow-xl order-2 md:order-1"
-                            : "w-full max-w-4xl aspect-video mx-auto order-1"
+                            ? "absolute bottom-28 right-4 w-32 md:bottom-28 md:right-8 md:w-64 aspect-[3/4] md:aspect-video rounded-2xl"
+                            : "absolute inset-0 w-full h-full"
                     )}
                 >
                     <video
@@ -140,33 +182,16 @@ export default function RoomPage() {
                         </div>
                     )}
                 </motion.div>
-
-                {/* Waiting State (If no remote stream) */}
-                {!remoteStream && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                    >
-                        <div className="glass px-6 py-3 rounded-full flex items-center gap-3">
-                            <div className="relative">
-                                <div className="h-2 w-2 bg-primary rounded-full animate-ping absolute inset-0" />
-                                <div className="h-2 w-2 bg-primary rounded-full relative" />
-                            </div>
-                            <span className="text-sm font-medium text-white/80">Waiting for peer to join...</span>
-                        </div>
-                    </motion.div>
-                )}
             </div>
 
-            {/* Controls Bar */}
+            {/* Controls Bar - Floating above everything */}
             <motion.div
                 initial={{ y: 100 }}
                 animate={{ y: 0 }}
                 transition={{ type: "spring", damping: 20 }}
-                className="absolute bottom-6 md:bottom-8 z-50"
+                className="absolute bottom-6 md:bottom-8 z-50 flex justify-center w-full"
             >
-                <div className="glass p-2 rounded-[2rem] flex items-center gap-2 md:gap-4 shadow-2xl ring-1 ring-white/10 px-4 md:px-6 py-3">
+                <div className="glass p-2 rounded-[2rem] flex items-center gap-2 md:gap-4 shadow-2xl ring-1 ring-white/10 px-4 md:px-6 py-3 bg-black/40 backdrop-blur-xl">
                     <Button
                         variant={isMuted ? "destructive" : "secondary"}
                         size="icon"

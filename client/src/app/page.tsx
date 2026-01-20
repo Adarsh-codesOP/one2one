@@ -19,7 +19,12 @@ export default function Home() {
     setIsLoading(true);
     // Simulate a brief "creation" delay for effect
     setTimeout(() => {
-      const newRoomId = crypto.randomUUID().slice(0, 8);
+      // Generate 4-character alphanum code
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let newRoomId = "";
+      for (let i = 0; i < 4; i++) {
+        newRoomId += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
       router.push(`/room/${newRoomId}`);
       toast.success("Room created!");
     }, 600);
