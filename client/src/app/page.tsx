@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Video, Users, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
+import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
@@ -20,12 +21,16 @@ export default function Home() {
     setTimeout(() => {
       const newRoomId = crypto.randomUUID().slice(0, 8);
       router.push(`/room/${newRoomId}`);
+      toast.success("Room created!");
     }, 600);
   };
 
   const joinRoom = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId.trim()) return;
+    if (!roomId.trim()) {
+      toast.error("Please enter a valid Room ID");
+      return;
+    }
     setIsLoading(true);
 
     if (socket) {
@@ -35,14 +40,16 @@ export default function Home() {
         checked = true;
         if (response.exists) {
           router.push(`/room/${roomId}`);
+          toast.success("Joining room...");
         } else {
-          alert("Room not found! Please check the ID.");
+          toast.error("Room not found! Please check the ID.");
           setIsLoading(false);
         }
       });
 
       setTimeout(() => {
         if (!checked) {
+          toast.warning("Server silent, trying to join anyway...");
           router.push(`/room/${roomId}`);
         }
       }, 2000);

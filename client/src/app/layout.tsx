@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Seamless, high-quality video calling for everyone.",
 };
 
+import { Toaster } from "@/components/ui/sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -20,6 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <SocketProvider>
           {children}
+          <Toaster />
         </SocketProvider>
       </body>
     </html>

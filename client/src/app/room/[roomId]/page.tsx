@@ -8,6 +8,8 @@ import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users } from 'luci
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
+import { toast } from 'sonner';
+
 export default function RoomPage() {
     const { roomId } = useParams() as { roomId: string };
     const router = useRouter();
@@ -25,25 +27,18 @@ export default function RoomPage() {
     const [isVideoOff, setIsVideoOff] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    const handleToggleMic = () => {
-        setIsMuted(!isMuted);
-        toggleAudio(isMuted);
-    };
+    // Toast notifications for connection status
+    useEffect(() => {
+        if (isConnected) {
+            toast.success("Secure connection established!");
+        }
+    }, [isConnected]);
 
-    const handleToggleVideo = () => {
-        setIsVideoOff(!isVideoOff);
-        toggleVideo(isVideoOff);
-    };
-
-    const handleLeave = () => {
-        router.push('/');
-    };
-
-    const copyRoomId = () => {
-        navigator.clipboard.writeText(roomId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    };
+    useEffect(() => {
+        if (remoteStream) {
+            toast.info("Peer video stream received");
+        }
+    }, [remoteStream]);
 
     // Attach remote stream when available
     useEffect(() => {
