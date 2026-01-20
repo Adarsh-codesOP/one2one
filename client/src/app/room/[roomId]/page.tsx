@@ -17,7 +17,8 @@ export default function RoomPage() {
         isConnected,
         toggleAudio,
         toggleVideo,
-        remoteStream
+        remoteStream,
+        connectionStatus
     } = useWebRTC(roomId);
 
     const [isMuted, setIsMuted] = useState(false);
@@ -50,7 +51,9 @@ export default function RoomPage() {
             <div className="absolute top-4 left-4 right-4 z-10 flex justify-between items-center">
                 <div className="bg-card/50 backdrop-blur-md border border-border/50 rounded-full px-4 py-2 flex items-center gap-2">
                     <div className={cn("h-2 w-2 rounded-full animate-pulse", isConnected ? "bg-green-500" : "bg-yellow-500")} />
-                    <span className="text-sm font-medium">{isConnected ? "Connected" : "Waiting for peer..."}</span>
+                    <span className="text-sm font-medium">
+                        {isConnected ? "Connected" : connectionStatus || "Waiting for peer..."}
+                    </span>
                 </div>
 
                 <Button variant="outline" size="sm" onClick={copyRoomId} className="bg-card/50 backdrop-blur-md rounded-full border-border/50">

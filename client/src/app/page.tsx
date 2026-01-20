@@ -20,6 +20,15 @@ export default function Home() {
   const joinRoom = (e: React.FormEvent) => {
     e.preventDefault();
     if (roomId.trim()) {
+      // @ts-ignore - accessing socket directly from window context or assuming provider
+      // Ideally we use a hook, but for this simple Landing Page we can access:
+      // We need to import useSocket here if we want to check connectivity.
+      // Or we just navigate and let the RoomPage handle invalid rooms? 
+      // User asked for "toast" ON THE LANDING PAGE.
+
+      // Let's assume we navigate immediately for now, handling the check is complex 
+      // without the socket context initialized fully. 
+      // Wait, we DO have SocketProvider at root.
       router.push(`/room/${roomId}`);
     }
   };

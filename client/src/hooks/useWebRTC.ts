@@ -158,11 +158,11 @@ export const useWebRTC = (roomId: string) => {
 
     // Toggle functions
     const toggleAudio = (enabled: boolean) => {
-        localStream?.getAudioTracks().forEach(track => track.enabled = enabled);
+        localStreamRef.current?.getAudioTracks().forEach(track => track.enabled = enabled);
     };
 
     const toggleVideo = (enabled: boolean) => {
-        localStream?.getVideoTracks().forEach(track => track.enabled = enabled);
+        localStreamRef.current?.getVideoTracks().forEach(track => track.enabled = enabled);
     };
 
     return {

@@ -27,30 +27,46 @@ const start = async () => {
             },
         });
 
+        // Track active rooms (for validation)
+        const activeRooms = new Set();
+
         io.on('connection', (socket) => {
             console.log('User connected:', socket.id);
 
             socket.on('join-room', (roomId, userId) => {
-                console.log(`User ${userId} joined room ${roomId}`);
+                const roomSize = io.sockets.adapter.rooms.get(roomId)?.size || 0;
+                console.log(`User ${userId} joining room ${roomId}. Current size: ${roomSize}`);
+
                 socket.join(roomId);
                 socket.to(roomId).emit('user-connected', userId);
 
                 socket.on('disconnect', () => {
-                    console.log(`User ${userId} disconnected`);
+                    console.log(`User ${userId} disconnected from ${roomId}`);
                     socket.to(roomId).emit('user-disconnected', userId);
                 });
             });
 
-            // Signaling events
+            // New event for checking validity before joining
+            socket.on('check-room', (roomId, callback) => {
+                const room = io.sockets.adapter.rooms.get(roomId);
+                const exists = room && room.size > 0;
+                console.log(`Check room request for ${roomId}: Exists? ${exists}`);
+                callback({ exists: !!exists });
+            });
+
+            // Signaling events - with logging
             socket.on('offer', (data) => {
+                console.log(`[Signal] Offer from ${socket.id} to room ${data.roomId}`);
                 socket.to(data.roomId).emit('offer', data);
             });
 
             socket.on('answer', (data) => {
+                console.log(`[Signal] Answer from ${socket.id} to room ${data.roomId}`);
                 socket.to(data.roomId).emit('answer', data);
             });
 
             socket.on('ice-candidate', (data) => {
+                // console.log(`[Signal] ICE from ${socket.id}`);
                 socket.to(data.roomId).emit('ice-candidate', data);
             });
         });
