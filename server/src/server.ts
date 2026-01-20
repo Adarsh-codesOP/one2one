@@ -67,7 +67,7 @@ const start = async () => {
             });
 
             socket.on('ice-candidate', (data) => {
-                // console.log(`[Signal] ICE from ${socket.id}`);
+                console.log(`[Signal] ICE from ${socket.id} to room ${data.roomId}`);
                 socket.to(data.roomId).emit('ice-candidate', data);
             });
         });

@@ -45,6 +45,13 @@ export default function RoomPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    // Fix: Attach remote stream to video element when it becomes available
+    useEffect(() => {
+        if (remoteVideoRef.current && remoteStream) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream, remoteVideoRef]);
+
     return (
         <div className="h-screen w-full bg-background relative overflow-hidden flex flex-col items-center justify-center p-4">
             {/* Header / Status */}
