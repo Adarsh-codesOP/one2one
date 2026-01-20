@@ -13,15 +13,31 @@ export const useWebRTC = (roomId: string) => {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
     const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
     const [isConnected, setIsConnected] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState<string>("Initializing...");
 
     // Refs to avoid dependency cycles in callbacks
     const peerConnection = useRef<RTCPeerConnection | null>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+    const localStreamRef = useRef<MediaStream | null>(null); // Added this
+
+    // Logging helper
+    const log = (msg: string, data?: any) => {
+        console.log(`[WebRTC] ${msg}`, data || '');
+    };
+
+    const error = (msg: string, err?: any) => {
+        console.error(`[WebRTC Error] ${msg}`, err || '');
+    };
 
     useEffect(() => {
         const init = async () => {
-            if (!socket) return;
+            if (!socket) {
+                setConnectionStatus("Socket not connected");
+                return;
+            }
+
+            setConnectionStatus("Getting Media...");
 
             // 1. Get User Media
             try {
@@ -29,12 +45,18 @@ export const useWebRTC = (roomId: string) => {
                     video: true,
                     audio: true,
                 });
+
+                log("Local stream acquired", stream.id);
                 setLocalStream(stream);
+                localStreamRef.current = stream; // Update ref!
+
                 if (localVideoRef.current) {
                     localVideoRef.current.srcObject = stream;
                 }
 
                 // 2. socket Join
+                setConnectionStatus(`Joining room ${roomId}...`);
+                log(`Joining room ${roomId} with socket ID: ${socket.id}`);
                 socket.emit('join-room', roomId, socket.id);
 
                 // 3. Set up listeners
@@ -45,7 +67,8 @@ export const useWebRTC = (roomId: string) => {
                 socket.on('user-disconnected', handleUserDisconnected);
 
             } catch (err) {
-                console.error("Error accessing media devices:", err);
+                error("Error accessing media devices:", err);
+                setConnectionStatus("Error: Camera/Mic Access Denied");
             }
         };
 
@@ -53,7 +76,8 @@ export const useWebRTC = (roomId: string) => {
 
         return () => {
             // Cleanup: stop tracks, close PC, off listeners
-            localStream?.getTracks().forEach(track => track.stop());
+            log("Cleaning up WebRTC hook");
+            localStreamRef.current?.getTracks().forEach(track => track.stop());
             peerConnection.current?.close();
             if (socket) {
                 socket.off('user-connected');
@@ -67,16 +91,23 @@ export const useWebRTC = (roomId: string) => {
 
     // Helpers to create PeerConnection if not exists
     const createPeer = (stream: MediaStream) => {
-        if (peerConnection.current) return peerConnection.current;
+        if (peerConnection.current) {
+            log("Reusing existing PeerConnection");
+            return peerConnection.current;
+        }
 
+        log("Creating new PeerConnection");
         const pc = new RTCPeerConnection(RTC_CONFIG);
 
         // Add local tracks
-        stream.getTracks().forEach(track => pc.addTrack(track, stream));
+        stream.getTracks().forEach(track => {
+            log(`Adding local track: ${track.kind}`);
+            pc.addTrack(track, stream);
+        });
 
         // Handle remote tracks
         pc.ontrack = (event) => {
-            console.log("Remote track received");
+            log("Remote track received", event.streams[0].id);
             setRemoteStream(event.streams[0]);
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.srcObject = event.streams[0];
@@ -86,6 +117,7 @@ export const useWebRTC = (roomId: string) => {
         // Handle ICE candidates
         pc.onicecandidate = (event) => {
             if (event.candidate && socket) {
+                log("Sending ICE candidate");
                 socket.emit('ice-candidate', {
                     roomId,
                     candidate: event.candidate,
@@ -95,8 +127,10 @@ export const useWebRTC = (roomId: string) => {
 
         // State change
         pc.onconnectionstatechange = () => {
-            console.log("PC Connection State:", pc.connectionState);
-            setIsConnected(pc.connectionState === 'connected');
+            const state = pc.connectionState;
+            log(`PC Connection State: ${state}`);
+            setIsConnected(state === 'connected');
+            setConnectionStatus(`Connection State: ${state}`);
         };
 
         peerConnection.current = pc;
@@ -104,64 +138,95 @@ export const useWebRTC = (roomId: string) => {
     };
 
     const handleUserConnected = async (userId: string) => {
-        console.log("User connected, creating offer", userId);
-        if (!localStream) return;
+        log(`User connected: ${userId}. Creating offer...`);
+        // USE REF HERE
+        const stream = localStreamRef.current;
+        if (!stream) {
+            error("No local stream, cannot create offer");
+            return;
+        }
 
-        const pc = createPeer(localStream);
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
+        try {
+            const pc = createPeer(stream);
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
 
-        socket?.emit('offer', {
-            roomId,
-            offer,
-        });
+            log("Sending offer");
+            socket?.emit('offer', {
+                roomId,
+                offer,
+            });
+        } catch (err) {
+            error("Error creating offer", err);
+        }
     };
 
     const handleOffer = async (data: { offer: RTCSessionDescriptionInit }) => {
-        console.log("Received offer");
-        if (!localStream) return; // Should optimize to wait for stream
+        log("Received offer");
+        // USE REF HERE
+        const stream = localStreamRef.current;
+        if (!stream) {
+            error("No local stream, cannot create answer");
+            return;
+        }
 
-        const pc = createPeer(localStream);
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
+        try {
+            const pc = createPeer(stream);
+            await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
 
-        socket?.emit('answer', {
-            roomId,
-            answer,
-        });
+            log("Sending answer");
+            socket?.emit('answer', {
+                roomId,
+                answer,
+            });
+        } catch (err) {
+            error("Error handling offer", err);
+        }
     };
 
     const handleAnswer = async (data: { answer: RTCSessionDescriptionInit }) => {
-        console.log("Received answer");
+        log("Received answer");
         const pc = peerConnection.current;
         if (pc) {
-            await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            try {
+                await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            } catch (err) {
+                error("Error setting remote description (answer)", err);
+            }
         }
     };
 
     const handleIceCandidate = async (data: { candidate: RTCIceCandidateInit }) => {
         const pc = peerConnection.current;
         if (pc) {
-            await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+            } catch (err) {
+                error("Error adding ICE candidate", err);
+            }
         }
     };
 
     const handleUserDisconnected = () => {
+        log("User disconnected");
         setRemoteStream(null);
         if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-        // Optionally close PC and reset
         peerConnection.current?.close();
         peerConnection.current = null;
         setIsConnected(false);
+        setConnectionStatus("Peer disconnected");
     }
 
     // Toggle functions
     const toggleAudio = (enabled: boolean) => {
+        // Safe access via ref
         localStreamRef.current?.getAudioTracks().forEach(track => track.enabled = enabled);
     };
 
     const toggleVideo = (enabled: boolean) => {
+        // Safe access via ref
         localStreamRef.current?.getVideoTracks().forEach(track => track.enabled = enabled);
     };
 
