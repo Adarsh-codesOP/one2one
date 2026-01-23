@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users, RefreshCw } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users, RefreshCw, Share2, Link } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -91,15 +91,44 @@ export default function RoomPage() {
                     </span>
                 </motion.div>
 
-                {/* Room ID Copy Button */}
+                {/* Room ID Copy Button - HIDDEN IN FAVOR OF NEW SHARE UI IF DESIRED, OR KEEP AS STATUS */}
+                {/* Keeping this centered pill as status, moving commands to top right as requested */}
+            </div>
+
+            {/* Top Right Share Controls */}
+            <div className="absolute top-6 right-6 z-50 flex flex-col gap-2">
+                {/* Mobile Share Button */}
                 <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={copyRoomId}
-                    className="text-xs text-muted-foreground hover:text-white hover:bg-white/5 transition-colors gap-2"
+                    variant="outline"
+                    size="icon"
+                    className="md:hidden glass rounded-full h-10 w-10 text-white border-white/10 hover:bg-white/10"
+                    onClick={() => {
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'Join my One2One call',
+                                text: `Join me on One2One! Room: ${roomId}`,
+                                url: window.location.href
+                            }).catch(console.error);
+                        } else {
+                            // Fallback if navigator.share fails or not supported (though hidden on desktop)
+                            copyRoomId();
+                        }
+                    }}
                 >
-                    Room: <span className="font-mono bg-white/5 px-1 rounded">{roomId}</span>
-                    {copied ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                    <Share2 className="h-4 w-4" />
+                </Button>
+
+                {/* Desktop + Mobile Copy Link Button */}
+                <Button
+                    variant="outline"
+                    size="icon"
+                    className="glass rounded-full h-10 w-10 text-white border-white/10 hover:bg-white/10"
+                    onClick={() => {
+                        navigator.clipboard.writeText(window.location.href);
+                        toast.success("Link copied to clipboard!");
+                    }}
+                >
+                    <Link className="h-4 w-4" />
                 </Button>
             </div>
 

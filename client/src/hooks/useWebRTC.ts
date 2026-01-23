@@ -137,6 +137,15 @@ export const useWebRTC = (roomId: string) => {
             setConnectionStatus(`Connection State: ${state}`);
         };
 
+        // ICE Connection State Change (Important for detecting drops)
+        pc.oniceconnectionstatechange = () => {
+            const iceState = pc.iceConnectionState;
+            log(`ICE Connection State: ${iceState}`);
+            if (iceState === 'disconnected' || iceState === 'failed' || iceState === 'closed') {
+                handleUserDisconnected();
+            }
+        };
+
         peerConnection.current = pc;
         return pc;
     };
@@ -216,11 +225,21 @@ export const useWebRTC = (roomId: string) => {
     const handleUserDisconnected = () => {
         log("User disconnected");
         setRemoteStream(null);
-        if (remoteVideoRef.current) remoteVideoRef.current.srcObject = null;
-        peerConnection.current?.close();
-        peerConnection.current = null;
+        if (remoteVideoRef.current) {
+            remoteVideoRef.current.srcObject = null;
+        }
+
+        // Don't close the entire PC immediately if it's just a temporary drop, 
+        // but for "User Disconnected" socket event, we should.
+        // If called from ICE disconnect, we might want to wait, but simplicity first:
+        if (peerConnection.current) {
+            peerConnection.current.close();
+            peerConnection.current = null;
+        }
+
         setIsConnected(false);
         setConnectionStatus("Peer disconnected");
+        toast.info("Peer disconnected");
     }
 
     // Toggle functions
