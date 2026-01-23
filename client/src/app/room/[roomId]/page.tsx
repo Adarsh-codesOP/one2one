@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWebRTC } from '@/hooks/useWebRTC';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Copy, Check, Users, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -20,7 +20,8 @@ export default function RoomPage() {
         toggleAudio,
         toggleVideo,
         remoteStream,
-        connectionStatus
+        connectionStatus,
+        switchCamera
     } = useWebRTC(roomId);
 
     const [isMuted, setIsMuted] = useState(false);
@@ -214,6 +215,16 @@ export default function RoomPage() {
                         onClick={handleToggleVideo}
                     >
                         {isVideoOff ? <VideoOff className="h-5 w-5 md:h-6 md:w-6" /> : <Video className="h-5 w-5 md:h-6 md:w-6" />}
+                    </Button>
+
+                    {/* Camera Flip (Mobile Only) */}
+                    <Button
+                        variant="secondary"
+                        size="icon"
+                        className="md:hidden h-12 w-12 rounded-full transition-all duration-300 shadow-md bg-white/10 hover:bg-white/20 text-white border-0"
+                        onClick={switchCamera}
+                    >
+                        <RefreshCw className="h-5 w-5" />
                     </Button>
 
                     <div className="w-px h-8 bg-white/10 mx-1 md:mx-2" />

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSocket } from '@/context/SocketContext';
+import { toast } from 'sonner';
 
 const RTC_CONFIG = {
     iceServers: [
@@ -233,6 +234,63 @@ export const useWebRTC = (roomId: string) => {
         localStreamRef.current?.getVideoTracks().forEach(track => track.enabled = enabled);
     };
 
+    // Camera switching
+    const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+
+    const switchCamera = async () => {
+        try {
+            const newMode = facingMode === 'user' ? 'environment' : 'user';
+
+            // 1. Get new video stream
+            const newStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: newMode },
+                audio: false // handling audio separately to avoid interruption
+            });
+
+            const newVideoTrack = newStream.getVideoTracks()[0];
+
+            // 2. Preserve mute state
+            const oldVideoTrack = localStreamRef.current?.getVideoTracks()[0];
+            if (oldVideoTrack) {
+                newVideoTrack.enabled = oldVideoTrack.enabled;
+                oldVideoTrack.stop();
+            }
+
+            // 3. Create new combined stream
+            const audioTracks = localStreamRef.current?.getAudioTracks() || [];
+            const newCombinedStream = new MediaStream([...audioTracks, newVideoTrack]);
+
+            // 4. Update state and refs
+            setLocalStream(newCombinedStream);
+            localStreamRef.current = newCombinedStream;
+            setFacingMode(newMode);
+
+            if (localVideoRef.current) {
+                localVideoRef.current.srcObject = newCombinedStream;
+            }
+
+            // 5. Update PeerConnection
+            if (peerConnection.current) {
+                const sender = peerConnection.current.getSenders().find(s => s.track?.kind === 'video');
+                if (sender) {
+                    sender.replaceTrack(newVideoTrack);
+                } else {
+                    // If no sender found (e.g. video was initially not added), add it? 
+                    // Usually established connection has sender. 
+                    // If not, we might need to addTrack but that requires renegotiation. 
+                    // For now assume sender exists if connected.
+                    log("Warning: No video sender found to replace track");
+                }
+            }
+
+            log(`Switched camera to ${newMode}`);
+
+        } catch (err) {
+            error("Error switching camera:", err);
+            toast.error("Failed to switch camera");
+        }
+    };
+
     return {
         localStream,
         remoteStream,
@@ -241,6 +299,7 @@ export const useWebRTC = (roomId: string) => {
         isConnected,
         connectionStatus,
         toggleAudio,
-        toggleVideo
+        toggleVideo,
+        switchCamera
     };
 };
