@@ -134,8 +134,8 @@ export default function Home() {
 
             {/* Separator - DISTINCT JOIN SECTION */}
             <div className="relative py-2 flex items-center justify-center">
-              <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-              <span className="absolute bg-[#0a0a0a] px-3 text-[10px] text-white/20 uppercase tracking-widest font-medium">Or Join Room</span>
+              <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+              <span className="absolute bg-[#0a0a0a] px-3 text-[10px] text-white uppercase tracking-widest font-semibold">Or Join Room</span>
             </div>
 
             {/* Input Area (Join Section) */}
