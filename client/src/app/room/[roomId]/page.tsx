@@ -75,24 +75,35 @@ export default function RoomPage() {
             <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-900/10 blur-[100px] rounded-full opacity-30 pointer-events-none" />
 
-            {/* Header / Status Pill */}
-            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 flex flex-col gap-3 items-center w-full px-4 text-center">
-                {/* Connection Status Badge */}
-                <motion.div
+            {/* Header / Room Info */}
+            <div className="absolute top-6 left-1/2 -translate-x-1/2 z-20 w-fit max-w-full px-4">
+                <motion.button
                     initial={{ y: -20, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    className="glass-card px-4 py-1.5 rounded-full flex items-center gap-2 shadow-lg"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                        copyRoomId();
+                        toast.success("Room ID copied!");
+                    }}
+                    className="glass px-5 py-2 rounded-full flex items-center gap-3 shadow-lg hover:bg-white/10 transition-colors"
                 >
-                    <div className={cn("h-2 w-2 rounded-full animate-pulse shadow-[0_0_10px_currentColor]",
-                        isConnected ? "bg-emerald-500 text-emerald-500" : "bg-amber-500 text-amber-500"
+                    {/* Status Dot */}
+                    <div className={cn("h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]",
+                        isConnected ? "bg-emerald-500 text-emerald-500 animate-pulse" : "bg-amber-500 text-amber-500"
                     )} />
-                    <span className="text-xs font-medium tracking-wide text-muted-foreground/80 uppercase">
-                        {isConnected ? "Live Secure Connection" : connectionStatus || "Connecting..."}
-                    </span>
-                </motion.div>
 
-                {/* Room ID Copy Button - HIDDEN IN FAVOR OF NEW SHARE UI IF DESIRED, OR KEEP AS STATUS */}
-                {/* Keeping this centered pill as status, moving commands to top right as requested */}
+                    {/* Room ID Text */}
+                    <div className="flex flex-col items-start leading-none">
+                        <span className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-0.5">
+                            {isConnected ? "Connected" : "Room ID"}
+                        </span>
+                        <span className="text-sm font-mono font-bold text-white tracking-widest">
+                            {roomId}
+                        </span>
+                    </div>
+
+                    <Copy className="h-4 w-4 text-white/40 ml-1" />
+                </motion.button>
             </div>
 
             {/* Top Right Share Controls */}

@@ -8,6 +8,7 @@ import { Video, Users, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react"
 import { motion } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const router = useRouter();
@@ -138,17 +139,60 @@ export default function Home() {
                 <div className="flex-grow border-t border-border/50"></div>
               </div>
 
-              <form onSubmit={joinRoom} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    placeholder="e.g. A2X9"
+              <form onSubmit={joinRoom} className="flex flex-col gap-4">
+                <div className="relative w-full max-w-[280px] mx-auto scale-110">
+                  {/* Hidden Input for Logic */}
+                  <input
+                    type="text"
                     value={roomId}
-                    onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                    className="h-12 bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 text-lg tracking-wide placeholder:tracking-normal uppercase"
+                    onChange={(e) => {
+                      const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+                      setRoomId(val);
+                    }}
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20"
+                    autoFocus
                   />
+
+                  {/* Visual Split Boxes */}
+                  <div className="flex gap-3 justify-center">
+                    {[0, 1, 2, 3].map((index) => {
+                      const char = roomId[index] || "";
+                      const isActive = roomId.length === index;
+                      const isFilled = roomId.length > index;
+
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "w-14 h-16 rounded-xl border flex items-center justify-center text-2xl font-bold transition-all duration-200 shadow-sm backdrop-blur-md",
+                            // Border & Ring Logic
+                            isActive
+                              ? "border-primary ring-2 ring-primary/30 bg-white/10 scale-105 z-10"
+                              : isFilled
+                                ? "border-white/20 bg-white/5"
+                                : "border-white/5 bg-black/20",
+                            // Text Color
+                            isFilled ? "text-white" : "text-white/30"
+                          )}
+                        >
+                          {char}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <Button type="submit" variant="secondary" className="h-12 w-12 shrink-0 aspect-square p-0 bg-white/10 hover:bg-white/20 border border-white/5 text-primary">
-                  <ArrowRight className="h-5 w-5" />
+
+                <Button
+                  type="submit"
+                  disabled={roomId.length < 4}
+                  className={cn(
+                    "w-full h-12 text-lg transition-all duration-300",
+                    roomId.length === 4
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
+                      : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                  )}
+                >
+                  Join Room <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </form>
             </div>
