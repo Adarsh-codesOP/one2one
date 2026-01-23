@@ -1,10 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Video, Users, ArrowRight, ShieldCheck, Zap, Globe } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { useSocket } from "@/context/SocketContext";
 import { toast } from "sonner";
@@ -18,9 +17,7 @@ export default function Home() {
 
   const createRoom = () => {
     setIsLoading(true);
-    // Simulate a brief "creation" delay for effect
     setTimeout(() => {
-      // Generate 4-character alphanum code
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
       let newRoomId = "";
       for (let i = 0; i < 4; i++) {
@@ -33,114 +30,112 @@ export default function Home() {
 
   const joinRoom = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId.trim()) {
-      toast.error("Please enter a valid Room ID");
-      return;
-    }
+    if (!roomId.trim()) return;
     setIsLoading(true);
 
     if (socket) {
       let checked = false;
-
       socket.emit('check-room', roomId, (response: { exists: boolean }) => {
         checked = true;
         if (response.exists) {
           router.push(`/room/${roomId}`);
           toast.success("Joining room...");
         } else {
-          toast.error("Room not found! Please check the ID.");
+          toast.error("Room not found!");
           setIsLoading(false);
         }
       });
-
       setTimeout(() => {
         if (!checked) {
-          toast.warning("Server silent, trying to join anyway...");
+          toast.warning("Server silent, trying...");
           router.push(`/room/${roomId}`);
         }
       }, 2000);
-
     } else {
       router.push(`/room/${roomId}`);
     }
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-background to-background flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-black flex flex-col relative overflow-hidden selection:bg-primary/30">
 
-      {/* Abstract Background Shapes */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/20 blur-[120px] rounded-full opacity-50 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[800px] h-[600px] bg-purple-900/20 blur-[100px] rounded-full opacity-30 pointer-events-none" />
+      {/* Deep Background Ambience - Static for performance */}
+      <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] bg-indigo-900/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[70vw] h-[70vw] bg-purple-900/10 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Navbar Placeholder */}
-      <nav className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full z-10">
-        <div className="flex items-center gap-2">
-          <div className="h-10 w-10 bg-gradient-to-tr from-primary to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-            <Video className="h-5 w-5 text-white" />
+      {/* Navbar */}
+      <nav className="p-8 flex justify-between items-center max-w-7xl mx-auto w-full z-10">
+        <div className="flex items-center gap-3">
+          {/* Custom Abstract Logo */}
+          <div className="relative h-10 w-10 flex items-center justify-center">
+            <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+            <svg viewBox="0 0 24 24" className="h-8 w-8 text-primary relative z-10" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" className="opacity-20" />
+              <path d="M8 12h8M12 8v8" strokeLinecap="round" strokeLinejoin="round" />
+              {/* Abstract connection representation */}
+              <path d="M12 2a10 10 0 0 1 10 10" className="opacity-60" />
+              <circle cx="12" cy="12" r="4" className="fill-current" />
+            </svg>
           </div>
-          <span className="text-xl font-bold tracking-tight">One2One</span>
+          <span className="text-xl font-bold tracking-tighter text-white">One2One</span>
         </div>
-        <Button variant="ghost" className="text-muted-foreground hover:text-primary">About</Button>
+        <Button
+          variant="ghost"
+          className="text-white/60 hover:text-white hover:bg-white/5 transition-all rounded-full px-6"
+          onClick={() => router.push('/about')}
+        >
+          About
+        </Button>
       </nav>
 
-      {/* Hero Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-4 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="w-full max-w-4xl text-center space-y-8 mb-12"
-        >
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-primary mb-4 backdrop-blur-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            Live P2P Video Calling
-          </div>
+      {/* Main Content - Centered & Minimal */}
+      <main className="flex-1 flex flex-col items-center justify-center p-4 relative z-10 w-full max-w-5xl mx-auto">
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 leading-tight">
-            Connect Instantly,<br /> Anywere.
-          </h1>
-
-          <p className="text-muted-foreground text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-            Experience crystal clear, secure, and limitless video calls. No sign-ups, no downloads—just a link.
-          </p>
-        </motion.div>
-
-        {/* Action Card */}
+        {/* Text Section */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="w-full max-w-md"
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center space-y-10 mb-16"
         >
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-purple-600 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-            <div className="relative glass p-8 rounded-2xl space-y-6">
+          <h1 className="text-6xl md:text-8xl font-bold tracking-tight text-white leading-[0.9] drop-shadow-2xl">
+            Pure Connection.
+          </h1>
+          <p className="text-xl text-white/40 max-w-lg mx-auto font-light leading-relaxed">
+            No logins. No downloads. Just you and them.
+          </p>
+        </motion.div>
 
-              <Button
-                className="w-full h-14 text-lg font-medium shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all duration-300"
-                size="lg"
-                onClick={createRoom}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
-                ) : (
-                  <Zap className="mr-2 h-5 w-5 fill-current" />
-                )}
-                Start Instant Meeting
-              </Button>
+        {/* Floating Action Card - High Depth */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+          className="w-full max-w-[360px] relative group"
+        >
+          {/* Glow backing */}
+          <div className="absolute -inset-1 bg-gradient-to-b from-primary/20 to-purple-500/0 rounded-[2rem] blur-xl opacity-30 group-hover:opacity-50 transition duration-1000" />
 
-              <div className="relative flex py-2 items-center">
-                <div className="flex-grow border-t border-border/50"></div>
-                <span className="flex-shrink-0 mx-4 text-muted-foreground text-xs uppercase tracking-wider">Or join with code</span>
-                <div className="flex-grow border-t border-border/50"></div>
-              </div>
+          <div className="relative bg-[#0a0a0a] border border-white/5 p-2 rounded-[2rem] shadow-2xl flex flex-col gap-2 ring-1 ring-white/5">
 
-              <form onSubmit={joinRoom} className="flex flex-col gap-4">
-                <div className="relative w-full max-w-[280px] mx-auto scale-110">
+            {/* Create Button */}
+            <Button
+              className="w-full h-16 rounded-[1.5rem] text-lg font-medium bg-white text-black hover:bg-white/90 shadow-[0_0_20px_rgba(255,255,255,0.1)] transition-all duration-300 transform hover:scale-[1.02]"
+              onClick={createRoom}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="h-5 w-5 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2" />
+              ) : (
+                <Zap className="mr-2 h-5 w-5 fill-current" />
+              )}
+              Start Instant Call
+            </Button>
+
+            {/* Input Area */}
+            <div className="bg-white/5 rounded-[1.5rem] p-4 transition-colors focus-within:bg-white/10 group/input">
+              <form onSubmit={joinRoom} className="flex gap-2 items-center">
+                <div className="relative flex-1 h-12">
                   {/* Hidden Input for Logic */}
                   <input
                     type="text"
@@ -149,84 +144,54 @@ export default function Home() {
                       const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
                       setRoomId(val);
                     }}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20"
-                    autoFocus
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20 font-bold"
+                    placeholder="Enter Code"
                   />
 
-                  {/* Visual Split Boxes */}
-                  <div className="flex gap-3 justify-center">
-                    {[0, 1, 2, 3].map((index) => {
-                      const char = roomId[index] || "";
-                      const isActive = roomId.length === index;
-                      const isFilled = roomId.length > index;
+                  {/* Visual Placeholder if empty */}
+                  {roomId.length === 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span className="text-white/20 text-sm font-medium uppercase tracking-widest">Enter Code</span>
+                    </div>
+                  )}
 
-                      return (
-                        <div
-                          key={index}
-                          className={cn(
-                            "w-14 h-16 rounded-xl border flex items-center justify-center text-2xl font-bold transition-all duration-200 shadow-sm backdrop-blur-md",
-                            // Border & Ring Logic
-                            isActive
-                              ? "border-primary ring-2 ring-primary/30 bg-white/10 scale-105 z-10"
-                              : isFilled
-                                ? "border-white/20 bg-white/5"
-                                : "border-white/5 bg-black/20",
-                            // Text Color
-                            isFilled ? "text-white" : "text-white/30"
-                          )}
-                        >
-                          {char}
+                  {/* Visual Split Boxes (Small & Clean) */}
+                  {roomId.length > 0 && (
+                    <div className="flex gap-2 justify-center h-full items-center pointer-events-none">
+                      {[0, 1, 2, 3].map((index) => (
+                        <div key={index} className="w-8 h-10 border-b-2 border-white/20 flex items-center justify-center text-xl font-bold text-white font-mono">
+                          {roomId[index] || ""}
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <Button
                   type="submit"
+                  size="icon"
                   disabled={roomId.length < 4}
                   className={cn(
-                    "w-full h-12 text-lg transition-all duration-300",
+                    "h-12 w-12 rounded-xl transition-all duration-300 shrink-0",
                     roomId.length === 4
-                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25"
-                      : "bg-white/5 text-muted-foreground hover:bg-white/10"
+                      ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,255,255,0.2)]"
+                      : "bg-transparent text-white/20"
                   )}
                 >
-                  Join Room <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
               </form>
             </div>
           </div>
         </motion.div>
 
-        {/* Features Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 1 }}
-          className="mt-20 grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl w-full text-center px-4"
-        >
-          {[
-            { icon: ShieldCheck, title: "End-to-End Secure", desc: "Available exclusively on secure connections." },
-            { icon: Users, title: "Unlimited Peers", desc: "Join multiple users in a single room." },
-            { icon: Globe, title: "Low Latency", desc: "Powered by WebRTC for real-time speed." },
-          ].map((feature, i) => (
-            <div key={i} className="flex flex-col items-center gap-3 p-4 rounded-xl hover:bg-white/5 transition-colors duration-300">
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-2">
-                <feature.icon className="h-6 w-6" />
-              </div>
-              <h3 className="font-semibold text-white">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.desc}</p>
-            </div>
-          ))}
-        </motion.div>
       </main>
 
-      {/* Footer */}
-      <footer className="w-full p-6 text-center z-10">
-        <p className="text-xs text-muted-foreground/60">
-          &copy; 2026 One2One. Built with Next.js & WebRTC.
-        </p>
+      {/* Footer - Minimal */}
+      <footer className="w-full p-8 text-center z-10">
+        <div className="text-[10px] uppercase tracking-[0.2em] text-white/20">
+          Secure • Private • Fast
+        </div>
       </footer>
     </div>
   );
