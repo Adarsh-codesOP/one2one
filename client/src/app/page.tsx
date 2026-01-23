@@ -132,10 +132,16 @@ export default function Home() {
               Start Instant Call
             </Button>
 
-            {/* Input Area */}
-            <div className="bg-white/5 rounded-[1.5rem] p-4 transition-colors focus-within:bg-white/10 group/input">
+            {/* Separator - DISTINCT JOIN SECTION */}
+            <div className="relative py-2 flex items-center justify-center">
+              <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+              <span className="absolute bg-[#0a0a0a] px-3 text-[10px] text-white/20 uppercase tracking-widest font-medium">Or Join Room</span>
+            </div>
+
+            {/* Input Area (Join Section) */}
+            <div className="bg-white/5 rounded-[1.5rem] p-4 transition-all duration-300 focus-within:bg-white/10 focus-within:ring-1 focus-within:ring-white/20 group/input">
               <form onSubmit={joinRoom} className="flex gap-2 items-center">
-                <div className="relative flex-1 h-16 group/otp">
+                <div className="relative flex-1 h-12 sm:h-14 group/otp">
                   {/* Hidden Input for Logic */}
                   <input
                     type="text"
@@ -147,26 +153,22 @@ export default function Home() {
                     className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-30 font-bold"
                   />
 
-                  {/* Visual OTP Boxes */}
-                  <div className="absolute inset-0 flex gap-3 justify-center items-center pointer-events-none z-20">
+                  {/* Visual OTP Boxes - Minimalist (No individual focus glow) */}
+                  <div className="absolute inset-0 flex gap-2 justify-center items-center pointer-events-none z-20">
                     {[0, 1, 2, 3].map((index) => {
-                      const isActive = roomId.length === index;
                       const isFilled = roomId.length > index;
 
                       return (
                         <div
                           key={index}
                           className={cn(
-                            "h-12 w-10 sm:h-14 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold transition-all duration-200 border",
-                            // Border & Background Logic
-                            isActive
-                              ? "border-primary bg-primary/10 ring-2 ring-primary/20 scale-110 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-                              : isFilled
-                                ? "border-white/20 bg-white/10 text-white"
-                                : "border-white/5 bg-black/20 text-white/10"
+                            "h-full flex-1 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-200 border",
+                            isFilled
+                              ? "border-white/20 bg-white/10 text-white"
+                              : "border-white/5 bg-black/20 text-white/5"
                           )}
                         >
-                          {roomId[index] || <span className="w-1.5 h-1.5 rounded-full bg-white/10" />}
+                          {roomId[index] || ""}
                         </div>
                       );
                     })}
@@ -178,10 +180,10 @@ export default function Home() {
                   size="icon"
                   disabled={roomId.length < 4}
                   className={cn(
-                    "h-12 w-12 rounded-xl transition-all duration-300 shrink-0",
+                    "h-12 w-12 sm:h-14 sm:w-14 rounded-xl transition-all duration-300 shrink-0",
                     roomId.length === 4
-                      ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(255,255,255,0.2)]"
-                      : "bg-transparent text-white/20"
+                      ? "bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:bg-white/90"
+                      : "bg-transparent text-white/10"
                   )}
                 >
                   <ArrowRight className="h-5 w-5" />
