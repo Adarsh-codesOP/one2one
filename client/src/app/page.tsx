@@ -135,7 +135,7 @@ export default function Home() {
             {/* Input Area */}
             <div className="bg-white/5 rounded-[1.5rem] p-4 transition-colors focus-within:bg-white/10 group/input">
               <form onSubmit={joinRoom} className="flex gap-2 items-center">
-                <div className="relative flex-1 h-12">
+                <div className="relative flex-1 h-16 group/otp">
                   {/* Hidden Input for Logic */}
                   <input
                     type="text"
@@ -144,27 +144,33 @@ export default function Home() {
                       const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
                       setRoomId(val);
                     }}
-                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-20 font-bold"
-                    placeholder="Enter Code"
+                    className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-30 font-bold"
                   />
 
-                  {/* Visual Placeholder if empty */}
-                  {roomId.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <span className="text-white/20 text-sm font-medium uppercase tracking-widest">Enter Code</span>
-                    </div>
-                  )}
+                  {/* Visual OTP Boxes */}
+                  <div className="absolute inset-0 flex gap-3 justify-center items-center pointer-events-none z-20">
+                    {[0, 1, 2, 3].map((index) => {
+                      const isActive = roomId.length === index;
+                      const isFilled = roomId.length > index;
 
-                  {/* Visual Split Boxes (Small & Clean) */}
-                  {roomId.length > 0 && (
-                    <div className="flex gap-2 justify-center h-full items-center pointer-events-none">
-                      {[0, 1, 2, 3].map((index) => (
-                        <div key={index} className="w-8 h-10 border-b-2 border-white/20 flex items-center justify-center text-xl font-bold text-white font-mono">
-                          {roomId[index] || ""}
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "h-12 w-10 sm:h-14 sm:w-12 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold transition-all duration-200 border",
+                            // Border & Background Logic
+                            isActive
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/20 scale-110 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                              : isFilled
+                                ? "border-white/20 bg-white/10 text-white"
+                                : "border-white/5 bg-black/20 text-white/10"
+                          )}
+                        >
+                          {roomId[index] || <span className="w-1.5 h-1.5 rounded-full bg-white/10" />}
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <Button
