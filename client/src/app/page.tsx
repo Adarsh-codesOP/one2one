@@ -139,7 +139,7 @@ export default function Home() {
             </div>
 
             {/* Input Area (Join Section) */}
-            <div className="bg-white/5 rounded-[1.5rem] p-4 transition-all duration-300 focus-within:bg-white/10 focus-within:ring-1 focus-within:ring-white/20 group/input">
+            <div className="bg-white/10 border border-white/10 rounded-[1.5rem] p-4 transition-all duration-300 focus-within:bg-white/15 focus-within:ring-1 focus-within:ring-white/20 group/input">
               <form onSubmit={joinRoom} className="flex gap-2 items-center">
                 <div className="relative flex-1 h-12 sm:h-14 group/otp">
                   {/* Hidden Input for Logic */}
@@ -165,7 +165,7 @@ export default function Home() {
                             "h-full flex-1 rounded-lg flex items-center justify-center text-xl font-bold transition-all duration-200 border",
                             isFilled
                               ? "border-white/20 bg-white/10 text-white"
-                              : "border-white/5 bg-black/20 text-white/5"
+                              : "border-white/10 bg-white/5 text-white/30"
                           )}
                         >
                           {roomId[index] || ""}
@@ -196,9 +196,12 @@ export default function Home() {
       </main>
 
       {/* Footer - Minimal */}
-      <footer className="w-full p-8 text-center z-10">
+      <footer className="w-full p-8 text-center z-10 flex flex-col items-center gap-2">
         <div className="text-[10px] uppercase tracking-[0.2em] text-white/20">
           Secure • Private • Fast
+        </div>
+        <div className="text-[10px] uppercase tracking-[0.15em] text-white/30 font-medium">
+          End-to-End Encrypted • Peer-to-Peer • HD Quality
         </div>
       </footer>
     </div>
